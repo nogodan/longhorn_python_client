@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 """ 
     1 Aug 2022 Taeho Choi created for longhorn API python client
     KUBECONFIG needs to be imported properly before running this script 
@@ -17,7 +19,7 @@ print("#"*40)
 print("Please make sure you have imported k8s config file correctly")
 time.sleep(1)
 
-print("Running kube proxy to redirect to local port")
+print("Running kube proxy to redirect svc port to local")
 os.system("kubectl port-forward services/longhorn-frontend 8080:http -n longhorn-system & ")
 time.sleep(3)
 
@@ -28,6 +30,9 @@ os.system("export http_proxy= ; export https_proxy= ")
 longhorn_url = 'http://longhorn-frontend.longhorn-system/v1'
 # If forwarding `longhorn-frontend` service to localhost
 longhorn_url = 'http://localhost:8080/v1'
+
+#Check to see if port is listening 
+os.system("curl http://localhost:8080/v1")
 
 #Create longhorn client object with given URL
 client = longhorn.Client(url=longhorn_url)
@@ -43,12 +48,11 @@ def option1():
      print('Handle option \'Option 1\'')
      volumes = client.list_volume()
      vol_json = json.loads(json.dumps(volumes,default=vars))
-     print("#"*40)
+     print("#"*200)
      print("These are the longhorn volumes")
-     print("#"*40)
-     for i in vol_json["data"]:
-        print(i["id"])
-     print("#"*40)
+     print("#"*200+"\n")
+     for _ijson in vol_json["data"]:
+        print("ID:{} STATE:{} CONTROLLER:{:<15} SIZE:{:<4}GB NS:{:<15} POD_NAME:{:<15}".format(_ijson["id"], _ijson["state"], _ijson["replicas"][0]["hostId"],int( _ijson["size"])/1024/1024/1024,_ijson["kubernetesStatus"]['namespace'], _ijson["kubernetesStatus"]['workloadsStatus'][0]['podName']))
 
 def option2():
      print('Handle option \'Option 2\'')
@@ -66,8 +70,10 @@ def option3():
 
 def option4():
      print('Handle option \'Option 4\'')
-     vol_id = input("what is the volume name or id to dettach: ")
+     vol_id = input("what is the volume name or id to detach: ")
      testvol1 = client.by_id_volume(id=vol_id)
+     print(type(testvol1))
+     print(testvol1)
      output = testvol1.detach()
      print(json.dumps(output, indent=4, default=vars))
 
@@ -209,3 +215,4 @@ if __name__=='__main__':
             options[option]()
         else:
             print('Invalid option. Please enter a number between 1 and 15.')
+
