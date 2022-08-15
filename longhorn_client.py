@@ -52,7 +52,11 @@ def option1():
      print("These are the longhorn volumes")
      print("#"*200+"\n")
      for _ijson in vol_json["data"]:
-        print("ID:{} STATE:{} CONTROLLER:{:<15} SIZE:{:<4}GB NS:{:<15} POD_NAME:{:<15}".format(_ijson["id"], _ijson["state"], _ijson["replicas"][0]["hostId"],int( _ijson["size"])/1024/1024/1024,_ijson["kubernetesStatus"]['namespace'], _ijson["kubernetesStatus"]['workloadsStatus'][0]['podName']))
+        try:
+            _pod_name = _ijson["kubernetesStatus"]['workloadsStatus'][0].get('podName')
+        except TypeError:
+            _pod_name = "N/A"
+        print("ID:{} STATE:{} CONTROLLER:{:<15} SIZE:{:<4}GB NS:{:<15} POD_NAME:{:<15}".format(_ijson["id"], _ijson["state"], _ijson["replicas"][0].get("hostId"),int( _ijson["size"])/1024/1024/1024,_ijson["kubernetesStatus"].get("namespace"), _pod_name))
 
 def option2():
      print('Handle option \'Option 2\'')
